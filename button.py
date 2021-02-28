@@ -1,33 +1,55 @@
-import pygame.font
-class Button():
+import pygame.freetype
+from pygame.sprite import Sprite
 
-    def __init__(self, screen, stats, x_size, y_size, x_pos, y_pos, msg):
-        
-        # Reference screen locally
-        self.screen = screen
-        self.screen_rect = screen.get_rect()
+def create_surface_with_text(text, font_size, text_rgb, bg_rgb):
+    font = pygame.freetype.SysFont("Courier", font_size, bold = True)
+    surface, _ = font.render(text=text, fgcolor=text_rgb, bgcolor=bg_rgb)
+    return surface.convert_alpha()
 
-        # Button dimensions/properties
-        self.width = x_size
-        self.height = y_size
-        self.button_color = (255, 0, 0)
-        self.text_color = (255, 255, 255)
-        self.font = pygame.font.SysFont(None, 24)
+class Button(Sprite):
+    def __init__(self, name, center_position, text, font_size, bg_rgb, text_rgb, action=None):
 
-        # Create rect for button
-        self.rect = pygame.Rect(0, 0, self.width, self.height)
-        self.rect.center = (x_pos, y_pos)
+        super().__init__()
 
-        # Call to render 
-        self.render_label(msg)
+        self.name = name
+        self.mouse_over = False
+        self.hover_sound = pygame.mixer.Sound('sounds\\click.wav')
+        self.hover_sound.set_volume(0.3)
+        self.already_clicked = False
 
-    def render_label(self, msg):
-        # Render text and place its rect at center of button rect
-        self.msg_image = self.font.render(msg, True, self.text_color, self.button_color)
-        self.msg_image_rect = self.msg_image.get_rect()
-        self.msg_image_rect.center = self.rect.center
+        default_image = create_surface_with_text(text, font_size, text_rgb, bg_rgb)
+        highlighted_image = create_surface_with_text(text, font_size * 1.2, text_rgb, bg_rgb)
 
-    def draw_button(self):
-        # Add button and text to screen
-        self.screen.fill(self.button_color, self.rect)
-        self.screen.blit(self.msg_image, self.msg_image_rect)
+        self.images = [default_image, highlighted_image]
+        self.rects = [default_image.get_rect(center=center_position), highlighted_image.get_rect(center=center_position)]
+
+        self.action = action
+
+    @property
+    def image(self):
+        return self.images[1] if self.mouse_over else self.images[0]
+
+    @property
+    def rect(self):
+        return self.rects[1] if self.mouse_over else self.rects[0]
+
+    def update(self, mouse_pos, mouse_up):
+        if self.rect.collidepoint(mouse_pos):
+            self.mouse_over = True
+            if not self.already_clicked:
+                self.hover_sound.play()
+                self.already_clicked = True
+            if mouse_up: return self.action
+        else:
+            self.mouse_over = False
+            self.already_clicked = False
+
+    def drawblit(self, surface):
+        surface.blit(self.image, self.rect)
+
+    def checkClick(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            if self.action is not None:
+                pygame.event.post(pygame.event.Event(int(self.action),{ "button_name" : self.name }))
+                return True
+        return False
