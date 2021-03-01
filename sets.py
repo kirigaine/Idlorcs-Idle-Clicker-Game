@@ -20,7 +20,7 @@ class ButtonSet():
 
     def draw(self, screen):
         for button in self.buttons:
-            button.drawblit(screen)
+            button.draw(screen)
 
 class ScreenSet():
     def __init__(self, *items):

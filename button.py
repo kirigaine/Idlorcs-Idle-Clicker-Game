@@ -1,13 +1,13 @@
 import pygame.freetype
 from pygame.sprite import Sprite
 
-def create_surface_with_text(text, font_size, text_rgb, bg_rgb):
+def create_text(text, font_size, text_rgb, bg_rgb):
     font = pygame.freetype.SysFont("Courier", font_size, bold = True)
     surface, _ = font.render(text=text, fgcolor=text_rgb, bgcolor=bg_rgb)
     return surface.convert_alpha()
 
 class Button(Sprite):
-    def __init__(self, name, center_position, text, font_size, bg_rgb, text_rgb, action=None):
+    def __init__(self, name, center_position, text, font_size, bg_rgb, text_rgb, action=None, top=None, bottom=None, left=None, right=None):
 
         super().__init__()
 
@@ -17,12 +17,14 @@ class Button(Sprite):
         self.hover_sound.set_volume(0.3)
         self.already_clicked = False
 
-        default_image = create_surface_with_text(text, font_size, text_rgb, bg_rgb)
-        highlighted_image = create_surface_with_text(text, font_size * 1.2, text_rgb, bg_rgb)
+        default_image = create_text(text, font_size, text_rgb, bg_rgb)
+        highlighted_image = create_text(text, font_size * 1.2, text_rgb, bg_rgb)
 
         self.images = [default_image, highlighted_image]
-        self.rects = [default_image.get_rect(center=center_position), highlighted_image.get_rect(center=center_position)]
-
+        if top is None and bottom is None and left is None and right is None:
+            self.rects = [default_image.get_rect(center=center_position), highlighted_image.get_rect(center=center_position)]
+        else:
+            self.rects = [default_image.get_rect(top=top), highlighted_image.get_rect(top=top)]
         self.action = action
 
     @property
@@ -44,7 +46,7 @@ class Button(Sprite):
             self.mouse_over = False
             self.already_clicked = False
 
-    def drawblit(self, surface):
+    def draw(self, surface):
         surface.blit(self.image, self.rect)
 
     def checkClick(self, mouse_pos):
