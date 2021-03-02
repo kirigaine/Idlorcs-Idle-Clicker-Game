@@ -43,7 +43,7 @@ class SubMenu(Sprite):
         self.rect = pygame.Rect(screen.get_rect().right-200,(screen.get_height() -300)/2, self.width, self.height)
         self.border = pygame.Rect(self.rect.x-2, self.rect.y-2, self.width+4, self.height+4)
 
-    def draw_menu(self):
+    def draw(self):
         self.screen.fill((255,255,255), self.border)
         self.screen.fill((255,0,0),self.rect)
 
@@ -54,8 +54,6 @@ def main():
 
     # Declare game active boolean to manage our gamestate loop
     game_active = True
-
-    particles = []
 
     # Initialize and manage pygame settings
     pygame.init()
@@ -73,20 +71,24 @@ def main():
     # Loop gamestates while active
     while game_active:
         if game_state == gf.GameState.TITLESCREEN:
-            game_state = title_screen(screen, particles, bg_music)
+            game_state = title_screen(screen, bg_music, game_settings.particles)
         elif game_state == gf.GameState.GAME:
-            game_state = game_screen(screen, particles, bg_music)
+            game_settings.particles = None
+            bg_music.toggle()
+            game_state = game_screen(screen, bg_music)
+            game_settings.particles = []
+            bg_music.restart()
         elif game_state == gf.GameState.SETTINGS:
-            game_state = settings_screen(screen, particles, bg_music)
+            game_state = settings_screen(screen, bg_music, game_settings.particles)
         elif game_state == gf.GameState.STATISTICS:
-            game_state = statistics_screen(screen, particles, bg_music)
+            game_state = statistics_screen(screen, bg_music)
         elif game_state == gf.GameState.QUIT:
             game_active = False
     
     # Close pygame upon exiting of gamestate loop -- quit the program
     pygame.quit()
 
-def title_screen(screen, particles, music):
+def title_screen(screen, music, particles):
     """Initialize buttons for title screen, put into button set to handle as a whole and direct towards game loop"""
 
     # Initialize title screen buttons and buttonset
@@ -101,9 +103,9 @@ def title_screen(screen, particles, music):
     img_logo = MyImage(screen, 'images\\idlorcstemplogo.png')
     itms_titlescreen = sets.ScreenSet(img_logo)
 
-    return game_loop(screen, btns_titlescreen, itms_titlescreen, particles, music)
+    return game_loop(screen, btns_titlescreen, itms_titlescreen, music, particles)
 
-def game_screen(screen, particles, music):
+def game_screen(screen, music):
     """Initialize buttons for game screen, put into button set to handle as a whole and direct towards game loop"""
 
     # Initialize game screen buttons and buttonset
@@ -114,9 +116,9 @@ def game_screen(screen, particles, music):
     # Initialize game screen images and imageset
     itms_gamescreen = sets.ScreenSet()
 
-    return game_loop(screen, btns_gamescreen, itms_gamescreen, particles, music)
+    return game_loop(screen, btns_gamescreen, itms_gamescreen, music)
 
-def settings_screen(screen, particles, music):
+def settings_screen(screen, music, particles):
     """Initialize buttons for setting screen, put into button set to handle as a whole and direct towards game loop"""
 
     # Initialize settings screen buttons and buttonset
@@ -128,10 +130,10 @@ def settings_screen(screen, particles, music):
     # Initialize settings screen images and imageset
     itms_settingsscreen = sets.ScreenSet()
 
-    return game_loop(screen, btns_settingsscreen, itms_settingsscreen, particles, music)
+    return game_loop(screen, btns_settingsscreen, itms_settingsscreen, music, particles)
 
 
-def statistics_screen(screen, particles, music):
+def statistics_screen(screen, music):
     """Initialize buttons for statistics screen, put into button set to handle as a whole and direct towards game loop"""
 
 
@@ -141,9 +143,9 @@ def statistics_screen(screen, particles, music):
     # Initialize statistics screen images and imageset
     itms_statisticsscreen = sets.ScreenSet()
 
-    return game_loop(screen, btns_statisticsscreen, itms_statisticsscreen, particles, music)
+    return game_loop(screen, btns_statisticsscreen, itms_statisticsscreen, music)
 
-def game_loop(screen, buttons, items, particles, music):
+def game_loop(screen, buttons, items, music, particles=None):
     """Manage events as well as update screen"""
     while True:
         gs_change = gf.check_events(buttons, music)

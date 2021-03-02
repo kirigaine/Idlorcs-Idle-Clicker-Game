@@ -24,13 +24,13 @@ def update_screen(screen, buttons, items, particles):
     items.draw(screen)
 
     mouse_up = False
-
-    if len(particles) <= 500:
-        particles.append(myparticles.SnowParticle(screen))
-    for particle in particles:
-        particle.draw(screen)
-        if particle.location[0] < 0 or particle.location[0] > screen.get_rect().width or particle.location[1] > screen.get_rect().height:
-            particles.remove(particle)
+    if particles is not None:
+        if len(particles) <= 500:
+            particles.append(myparticles.SnowParticle(screen))
+        for particle in particles:
+            particle.draw(screen)
+            if particle.location[0] < 0 or particle.location[0] > screen.get_rect().width or particle.location[1] > screen.get_rect().height:
+                particles.remove(particle)
 
     for button in buttons.buttons:
         button.update(pygame.mouse.get_pos(), mouse_up)

@@ -7,6 +7,7 @@ class Settings():
         self.screen_width = 800
         self.screen_height = 600
         self.bg_color = (0,0,0)
+        self.particles = []
 
         # Customizable settings
         self.music_on = True
@@ -50,6 +51,11 @@ class MusicHandler():
             self.bool_playing = False
         else:
             pygame.mixer.music.unpause()
+            self.bool_playing = True
+
+    def restart(self):
+        if self.music_volume > 0.0:
+            pygame.mixer.music.play(-1)
             self.bool_playing = True
 
     def lower_volume(self):
