@@ -1,3 +1,5 @@
+"""settings.py"""
+#from enum import Enum
 import pygame
 
 class Settings():
@@ -6,32 +8,124 @@ class Settings():
         # Screen settings
         self.screen_width = 800
         self.screen_height = 600
+        self.monitor_size = (pygame.display.Info().current_w, pygame.display.Info().current_h)
         self.bg_color = (0,0,0)
         self.particles = []
 
+        print("Monitor Size:" + str(self.monitor_size[0]) + "x" + str(self.monitor_size[1]))
         # Customizable settings
+        self.fullscreen = False
+        self.screen_resolution = (self.screen_width, self.screen_height)
         self.music_on = True
         self.sound_on = True
         self.music_volume = 0.1
         self.sound_volume = 0.3
 
-class PercentBar():
-    def __init__(self, label, starting_percent, is_on, btn_lower, btn_raise, center_position, top=None, bottom=None, left=None, right=None):
-        self.current_percent = starting_percent
+# ********* MAYBE REDO THIS AS ENUM LATER ***********
+class ScreenResolutions():
+
+    def __init__(self):
+        self.resolutions = []
+        self.resolutions.append((1920,1080))
+        self.resolutions.append((1600,900))
+        self.resolutions.append((1440,900))
+        self.resolutions.append((1366,768))
+        self.resolutions.append((1280,720))
+        self.resolutions.append((1024,768))
+        self.resolutions.append((800,600))
+
+class MusicPercentBar():
+    def __init__(self, parent_button, settings, btn_lower, btn_raise):
+        self.current_percent = settings.music_volume
         self.display_percent = self.current_percent * 100
-        self.label = label
-        self.on = is_on
-        self.rect = pygame.Rect(0, 0, 200, 50)
+        self.parent_button = parent_button
+        self.first_button = btn_lower
+        self.last_button = btn_raise
 
-        if top is None and bottom is None and left is None and right is None:
-            self.rect.center = center_position
-        else:
-            self.rect.top = top
-        btn_lower.rect.right = self.rect.left
-        btn_raise.rect.left = self.rect.right
+        # Position the volume changing arrows as well as the drawn rectangles according to parent button
+        self.reposition_children()
 
-    def draw(self):
-        pass
+    def reposition_children(self):
+        """Align all objects to form percent bar"""
+        # Iterate through first_buttons's rects and move them to the top and right of parent_button
+        for rect in self.first_button.rects:
+            rect.topleft = (self.parent_button.rect.right + 5, self.parent_button.rect.top)
+
+        # Iterate through last_button's rects and move them 5 pixels to the right ***CHECK***
+        for rect in self.last_button.rects:
+            rect.topleft = (rect.left + 5, rect.top)
+
+    def draw(self,screen,settings):
+        self.current_percent = settings.music_volume
+        self.update_arrows()
+        text_rgb = (255,255,255)
+        if not self.get_state():
+            text_rgb = (85,85,85)
+        increment_percent = 0.0
+        while(increment_percent != self.current_percent):
+            pygame.draw.rect(screen,text_rgb,pygame.Rect(self.first_button.rect.left+50 + (2*increment_percent*150),self.first_button.rect.top-5, 10, 30))
+            increment_percent = round(increment_percent+0.05,2)
+
+    def get_state(self):
+        return self.parent_button.toggle_state
+
+    def update_arrows(self):
+        parentbutton_state = self.get_state()
+        if not parentbutton_state:
+            self.first_button.disable_button()
+            self.last_button.disable_button()
+        if self.current_percent == 0.0:
+            self.first_button.disable_button()
+        if self.current_percent == 1.0:
+            self.last_button.disable_button()
+        if parentbutton_state and self.current_percent > 0.0 and self.current_percent < 1.0:
+            self.first_button.enable_button()
+            self.last_button.enable_button()
+        elif parentbutton_state and self.current_percent > 0.0:
+            self.first_button.enable_button()
+        elif parentbutton_state and self.current_percent < 1.0:
+            self.last_button.enable_button()
+       # elif current_state and not self.first_button.enabled and self.current_percent > 0.0:
+          #  self.first_button.enable_button()
+       # elif current_state and not self.last_button.enabled and self.current_percent < 1.0:
+            #self.last_button.enable_button()
+
+class SoundPercentBar(MusicPercentBar):
+    def __init__(self, parent_button, settings, btn_lower, btn_raise):
+        super().__init__(parent_button, settings, btn_lower, btn_raise)
+        self.current_percent = settings.sound_volume
+
+    def draw(self,screen,settings):
+        self.current_percent = settings.sound_volume
+        self.update_arrows()
+        text_rgb = (255,255,255)
+        if not self.get_state():
+            text_rgb = (85,85,85)
+        increment_percent = 0.0
+        while(increment_percent != self.current_percent):
+            pygame.draw.rect(screen,text_rgb,pygame.Rect(self.first_button.rect.left+50 + (2*increment_percent*150),self.first_button.rect.top-5, 10, 30))
+            increment_percent = round(increment_percent+0.05,2)
+
+
+class SoundHandler():
+    """A clas to handle sound"""
+    def __init__(self, game_settings):
+        self.sound_volume = game_settings.sound_volume
+        self.sound_on = game_settings.sound_on
+
+    def lower_volume(self, game_settings):
+        if self.sound_volume > 0.0:
+            self.sound_volume = round(self.sound_volume - 0.05, 3)
+            self.set_volume(game_settings)
+
+    def raise_volume(self, game_settings):
+        if self.sound_volume < 1.0:
+            self.sound_volume = round(self.sound_volume + 0.05,3)
+            self.set_volume(game_settings)
+    
+    def set_volume(self, game_settings):
+        game_settings.sound_volume = self.sound_volume
+
 
 class MusicHandler():
     """A class to play and toggle music"""
@@ -42,23 +136,41 @@ class MusicHandler():
         pygame.mixer.music.load("music\\Prelude1inCmajor.flac")
         pygame.mixer.music.set_volume(self.music_volume)
         pygame.mixer.music.play(-1)
-        self.bool_playing = True
+        self.music_on = game_settings.music_on
+        self.music_playing = True
 
-    def toggle(self):
+    def toggle(self, game_settings):
         """Toggles music off/on based on current state"""
-        if self.bool_playing:
+        self.music_on = game_settings.music_on
+        if self.music_on:
+            pygame.mixer.music.unpause()
+        else:
             pygame.mixer.music.pause()
-            self.bool_playing = False
+
+    def pause_unpause(self):
+        if self.music_playing:
+            pygame.mixer.music.pause()
         else:
             pygame.mixer.music.unpause()
-            self.bool_playing = True
+        self.music_playing = not self.music_playing
 
     def restart(self):
         if self.music_volume > 0.0:
             pygame.mixer.music.play(-1)
-            self.bool_playing = True
+            self.music_on = True
 
-    def lower_volume(self):
-        pass # TODO
-    def raise_volume(self):
-        pass # TODO
+    def lower_volume(self, game_settings):
+        if self.music_volume > 0.0:
+            self.music_volume = round(self.music_volume-0.05,3)
+            self.set_volume(game_settings)
+
+    def raise_volume(self, game_settings):
+        if self.music_volume < 1.0:
+            self.music_volume = round(self.music_volume+0.05,3)
+            self.set_volume(game_settings)
+
+    def set_volume(self, game_settings):
+        game_settings.music_volume = self.music_volume
+        pygame.mixer.music.set_volume(game_settings.music_volume)
+        if not self.music_on and self.music_volume > 0.0:
+            self.toggle(game_settings)

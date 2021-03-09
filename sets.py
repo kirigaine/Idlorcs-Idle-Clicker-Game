@@ -1,3 +1,5 @@
+"""sets.py"""
+import particles
 #class BasicSet:
  #   def __init__(self, *individuals):
   #      self.individuals = list(individuals)
@@ -28,7 +30,15 @@ class ScreenSet():
 
     def draw(self, screen):
         for item in self.items:
-            screen.blit(item.image, item.rect)
+            item.draw(screen)
+
+class PercentSet():
+    def __init__(self, *percentbars):
+        self.percentbars = list(percentbars)
+
+    def draw(self, screen, settings):
+        for percentbar in self.percentbars:
+            percentbar.draw(screen, settings)
 
 class SnowParticleSet():
     
@@ -37,7 +47,7 @@ class SnowParticleSet():
 
     def add_particles(self, screen):
         if len(self.particles) <= 500:
-            self.particles.append(SnowParticle(screen))
+            self.particles.append(particles.SnowParticle(screen))
 
     def update(self, screen):
         self.add_particles(screen)
