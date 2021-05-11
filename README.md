@@ -2,12 +2,14 @@
 
 ## Description
 
+Idlorcs is an idle game with a minor twist: it plays similar to old school RTS games! Gather resources, defend your town, upgrade technology, and populate that town with all kinds of orcs! 
+
 ## Installation
 
 ## Usage
 
 ## Controls
-
+Mouse Only
 ## Known Issues
 
 ## Contributing
