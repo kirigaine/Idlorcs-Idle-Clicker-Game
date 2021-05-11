@@ -4,7 +4,7 @@
 * Project Name: Idlorcs                                 *
 * Author: github.com/kirigaine                          *
 * Description: An idle game based around orcs           *
-* Requirements: TBD                                     *
+* Requirements: pip install -r requirements.txt         *
 *                                                       *
 *********************************************************
 """
@@ -46,6 +46,8 @@ def main():
         if game_state == gf.GameState.TITLESCREEN:
             game_state = title_screen(screen, bg_music, bg_sound, game_settings, game_settings.particles)
         elif game_state == gf.GameState.GAME:
+            # Remove all particles from particle list, and pause the music if music is enabled.
+            # Then transition game_state. Reverse all if exiting gamestate
             game_settings.particles = None
             if bg_music.music_playing and game_settings.music_on:
                 bg_music.pause_unpause()
@@ -64,6 +66,7 @@ def main():
 
 def title_screen(screen, music, sound, g_settings, particles):
     """Initialize buttons for title screen, put into button set to handle as a whole and direct towards game loop"""
+    # Get screen rect to position ui
     screen_rect = screen.get_rect()
 
     # Initialize title screen buttons and buttonset
@@ -83,6 +86,7 @@ def title_screen(screen, music, sound, g_settings, particles):
 def settings_screen(screen, music, sound, g_settings, particles):
     """Initialize buttons for setting screen, put into button set to handle as a whole and direct towards game loop"""
 
+    # Get screen rect to position ui
     screen_rect = screen.get_rect()
 
     # Initialize settings screen buttons and buttonset
@@ -107,15 +111,16 @@ def settings_screen(screen, music, sound, g_settings, particles):
 
 def game_screen(screen, music, sound, g_settings):
     """Initialize buttons for game screen, put into button set to handle as a whole and direct towards game loop"""
+    # Get screen rect to position ui
     screen_rect = screen.get_rect()
 
     # Initialize game screen buttons and buttonset
     btn_titlescreen = uibtn.Button("btn_titlescreen",(0,0),"Return",30,gui.BLACK,gui.WHITE,g_settings,gf.ButtonEvent.MENU_BUTTON,topleft=screen_rect.topleft)
     btn_printsmth = uibtn.Button("btn_printsmth",(400,400),"Print Something",30,gui.BLACK,gui.WHITE,g_settings,gf.ButtonEvent.MENU_BUTTON)
     btns_gamescreen = sets.ButtonSet(btn_titlescreen, btn_printsmth)
-    gui_buymenu = gui.SubMenu(screen)
 
     # Initialize game screen images and imageset
+    gui_buymenu = gui.SubMenu(screen)
     itms_gamescreen = sets.ScreenSet(gui_buymenu)
 
     return game_loop(screen, btns_gamescreen, itms_gamescreen, music, sound, g_settings)
@@ -123,10 +128,13 @@ def game_screen(screen, music, sound, g_settings):
 def game_loop(screen, buttons, items, music, sound, g_settings, particles=None, percentthing=None):
     """Manage events, return a gamestate change if it happens, and update the screen"""
     while True:
+        # Check and manage event queue
         gs_change = gf.check_events(buttons, music, sound, g_settings)
+        # If we are returned a new gamestate from checking events, return the gamestate again to transition
         if isinstance(gs_change, gf.GameState):
             return gs_change
 
+        # Update all aspects on screen
         gf.update_screen(screen, buttons, items, g_settings, particles, percentthing)
 
 # Call to main program loop

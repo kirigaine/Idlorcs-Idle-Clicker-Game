@@ -37,6 +37,7 @@ class ScreenResolutions():
 class MusicPercentBar():
     def __init__(self, parent_button, settings, btn_lower, btn_raise):
         self.current_percent = settings.music_volume
+        # ******Might remove display percent entirely, depends if used or not******
         self.display_percent = self.current_percent * 100
         self.parent_button = parent_button
         self.first_button = btn_lower
@@ -56,74 +57,92 @@ class MusicPercentBar():
             rect.topleft = (rect.left + 5, rect.top)
 
     def draw(self,screen,settings):
+        # Update music volume to current value in settings
         self.current_percent = settings.music_volume
+        # Manage raise and lower volume arrows
         self.update_arrows()
-        text_rgb = (255,255,255)
+        # Set rectangle color to white by default, or gray if parent state is false
+        rect_rgb = (255,255,255)
         if not self.get_state():
-            text_rgb = (85,85,85)
+            rect_rgb = (85,85,85)
+        
+        # Set base volume of 0.0 and increment it by 0.05 up to current volume to draw x number of rectangles for visual reference
         increment_percent = 0.0
         while(increment_percent != self.current_percent):
-            pygame.draw.rect(screen,text_rgb,pygame.Rect(self.first_button.rect.left+50 + (2*increment_percent*150),self.first_button.rect.top-5, 10, 30))
+            pygame.draw.rect(screen,rect_rgb,pygame.Rect(self.first_button.rect.left+50 + (2*increment_percent*150),self.first_button.rect.top-5, 10, 30))
+            # Round to prevent errors
             increment_percent = round(increment_percent+0.05,2)
 
     def get_state(self):
+        # Return state of parent button
         return self.parent_button.toggle_state
 
     def update_arrows(self):
+        # Get current state of parent for comparison
         parentbutton_state = self.get_state()
+        # Disable raise and lower volume buttons when parent toggled off
         if not parentbutton_state:
             self.first_button.disable_button()
             self.last_button.disable_button()
-        if self.current_percent == 0.0:
+        # Disable lower volume button when volume is 0.0
+        elif parentbutton_state and self.current_percent == 0.0:
             self.first_button.disable_button()
-        if self.current_percent == 1.0:
+            self.last_button.enable_button()
+        # Disable raise volume button when volume is 1.0
+        elif parentbutton_state and self.current_percent == 1.0:
             self.last_button.disable_button()
-        if parentbutton_state and self.current_percent > 0.0 and self.current_percent < 1.0:
+            self.first_button.enable_button()
+        # Enable raise and lower volume buttons when between 0.0 and 1.0
+        elif parentbutton_state and self.current_percent > 0.0 and self.current_percent < 1.0:
             self.first_button.enable_button()
             self.last_button.enable_button()
-        elif parentbutton_state and self.current_percent > 0.0:
-            self.first_button.enable_button()
-        elif parentbutton_state and self.current_percent < 1.0:
-            self.last_button.enable_button()
-       # elif current_state and not self.first_button.enabled and self.current_percent > 0.0:
-          #  self.first_button.enable_button()
-       # elif current_state and not self.last_button.enabled and self.current_percent < 1.0:
-            #self.last_button.enable_button()
 
 class SoundPercentBar(MusicPercentBar):
     def __init__(self, parent_button, settings, btn_lower, btn_raise):
         super().__init__(parent_button, settings, btn_lower, btn_raise)
+        # Change current_percent to manage sound volume rather than music volume
         self.current_percent = settings.sound_volume
 
     def draw(self,screen,settings):
+        # Had to override this method due to implementation, prevents from having to pass more variables to here
+        # Update sound volume to current value in settings
         self.current_percent = settings.sound_volume
+        # Manage raise and lower volume arrows
         self.update_arrows()
+        # Set rectangle color to white by default, or gray if parent state is false
         text_rgb = (255,255,255)
         if not self.get_state():
             text_rgb = (85,85,85)
+        
+        # Set base volume of 0.0 and increment it by 0.05 up to current volume to draw x number of rectangles for visual reference
         increment_percent = 0.0
         while(increment_percent != self.current_percent):
             pygame.draw.rect(screen,text_rgb,pygame.Rect(self.first_button.rect.left+50 + (2*increment_percent*150),self.first_button.rect.top-5, 10, 30))
+            # Round to prevent errors
             increment_percent = round(increment_percent+0.05,2)
 
 
 class SoundHandler():
-    """A clas to handle sound"""
+    """A class to handle sound"""
     def __init__(self, game_settings):
+        # Pull in initial values from game_settings
         self.sound_volume = game_settings.sound_volume
         self.sound_on = game_settings.sound_on
 
     def lower_volume(self, game_settings):
+        # If volume is greater than 0.0, lower by 0.05 and call set_volume
         if self.sound_volume > 0.0:
             self.sound_volume = round(self.sound_volume - 0.05, 3)
             self.set_volume(game_settings)
 
     def raise_volume(self, game_settings):
+        # If volume is less than 1.0, raise by 0.05 and call set_volume
         if self.sound_volume < 1.0:
             self.sound_volume = round(self.sound_volume + 0.05,3)
             self.set_volume(game_settings)
     
     def set_volume(self, game_settings):
+        # Copy self.sound_volume to game_settings.sound_volume
         game_settings.sound_volume = self.sound_volume
 
 

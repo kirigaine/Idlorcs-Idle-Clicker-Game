@@ -47,7 +47,7 @@ class Button(Sprite):
                 if settings.sound_on:
                     self.hover_sound.set_volume(settings.sound_volume)
                     self.hover_sound.play()
-                    self.already_clicked = True
+                self.already_clicked = True
             if mouse_up:
                 return self.action
         else:
